@@ -18,21 +18,50 @@ void gpu_create(gpu_t* gpu, win_t* win, cam_t* cam) {
   }
 
   const Vertex vertices[] = {
-      (Vertex){
-          .pos = {-0.5f, -0.5f, 0.0f},
-          .col = {1.0f, 0.5f, 0.2f},
-          .uv = {0.0f, 0.0f},
-      },
-      (Vertex){
-          .pos = {0.5f, -0.5f, 0.0f},
-          .col = {0.0f, 0.5f, 0.2f},
-          .uv = {1.0f, 0.0f},
-      },
-      (Vertex){
-          .pos = {0.0f, 0.5f, 0.0f},
-          .col = {0.3f, 0.5f, 0.2f},
-          .uv = {0.5f, 1.0f},
-      },
+      // Front: +Z
+      {.pos = {-0.5f, -0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {0, 0}},
+      {.pos = {0.5f, -0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {1, 0}},
+      {.pos = {0.5f, 0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {1, 1}},
+      {.pos = {-0.5f, 0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {0, 1}},
+
+      // Back: -Z
+      {.pos = {-0.5f, -0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {0, 0}},
+      {.pos = {-0.5f, 0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {0, 1}},
+      {.pos = {0.5f, 0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {1, 1}},
+      {.pos = {0.5f, -0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {1, 0}},
+
+      // Right: +X
+      {.pos = {0.5f, -0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {0, 0}},
+      {.pos = {0.5f, -0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {1, 0}},
+      {.pos = {0.5f, 0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {1, 1}},
+      {.pos = {0.5f, 0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {0, 1}},
+
+      // Left: -X
+      {.pos = {-0.5f, -0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {0, 0}},
+      {.pos = {-0.5f, -0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {1, 0}},
+      {.pos = {-0.5f, 0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {1, 1}},
+      {.pos = {-0.5f, 0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {0, 1}},
+
+      // Top: +Y
+      {.pos = {-0.5f, 0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {0, 0}},
+      {.pos = {0.5f, 0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {1, 0}},
+      {.pos = {0.5f, 0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {1, 1}},
+      {.pos = {-0.5f, 0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {0, 1}},
+
+      // Bottom: -Y
+      {.pos = {-0.5f, -0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {0, 0}},
+      {.pos = {0.5f, -0.5f, -0.5f}, .col = {1, 1, 1}, .uv = {1, 0}},
+      {.pos = {0.5f, -0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {1, 1}},
+      {.pos = {-0.5f, -0.5f, 0.5f}, .col = {1, 1, 1}, .uv = {0, 1}},
+  };
+
+  const uint32_t indices[] = {
+      0,  1,  2,  2,  3,  0,   // Front
+      4,  5,  6,  6,  7,  4,   // Back
+      8,  9,  10, 10, 11, 8,   // Right
+      12, 13, 14, 14, 15, 12,  // Left
+      16, 17, 18, 18, 19, 16,  // Top
+      20, 21, 22, 22, 23, 20,  // Bottom
   };
 
   msh_attrib_t attribs[2] = {
@@ -53,10 +82,12 @@ void gpu_create(gpu_t* gpu, win_t* win, cam_t* cam) {
   };
 
   GladGLContext* gl = &gpu->gl;
-  msh_desc_t desc = (msh_desc_t){
+  msh_desc_t desc = {
       .gl = gl,
       .vertices = vertices,
+      .indices = indices,
       .vertices_count = ARRAY_SIZE(vertices),
+      .indices_count = ARRAY_SIZE(indices),
       .stride = sizeof(Vertex),
       .attribs = {attribs[0], attribs[1]},
       .msh_attrib_count = ARRAY_SIZE(attribs),
@@ -73,6 +104,12 @@ void gpu_create(gpu_t* gpu, win_t* win, cam_t* cam) {
   gpu->cam = cam;
 
   gpu->gpu_initialized = 1;
+
+  gl->Enable(GL_DEPTH_TEST);
+
+  gl->Enable(GL_CULL_FACE);
+  gl->CullFace(GL_BACK);
+  gl->FrontFace(GL_CCW);
 }
 
 void gpu_begin(gpu_t* gpu) {
@@ -84,8 +121,8 @@ void gpu_begin(gpu_t* gpu) {
   glfwGetFramebufferSize(gpu->win->handle, &gpu->width, &gpu->height);
 
   gl->Viewport(0, 0, gpu->width, gpu->height);
-  gl->Clear(GL_COLOR_BUFFER_BIT);
   gl->ClearColor(0.10f, 0.10f, 0.10f, 1.0f);
+  gl->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void gpu_end(gpu_t* gpu) {
@@ -94,7 +131,16 @@ void gpu_end(gpu_t* gpu) {
 
   shd_bind(&gpu->shd);
 
-  mat44_t mvp = cam_get_mvp(gpu->cam, gpu->width, gpu->height);
+  float time = (float)glfwGetTime();
+
+  mat44_t model =
+      mat44_mul_mat44(mat44_rotation_x(time * 0.5f), mat44_rotation_y(time));
+
+  mat44_t view_projection =
+      cam_get_view_projection(gpu->cam, gpu->width, gpu->height);
+
+  mat44_t mvp = mat44_mul_mat44(model, view_projection);
+
   shd_set_mat4(&gpu->shd, "mvp", mvp);
 }
 

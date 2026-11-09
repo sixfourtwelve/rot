@@ -26,6 +26,18 @@ void msh_create(msh_t* msh, msh_desc_t* desc) {
 
   msh->buf.count = desc->vertices_count;
 
+  if (desc->indices && desc->indices_count > 0) {
+    gl->GenBuffers(1, &msh->buf.ebo);
+    gl->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, msh->buf.ebo);
+    gl->BufferData(GL_ELEMENT_ARRAY_BUFFER,
+                   sizeof(uint32_t) * desc->indices_count, desc->indices,
+                   GL_STATIC_DRAW);
+
+    msh->buf.count = desc->indices_count;
+  } else {
+    msh->buf.count = desc->vertices_count;
+  }
+
   msh->initialized = 1;
 }
 
@@ -36,7 +48,12 @@ void msh_draw(msh_t* msh) {
   GladGLContext* gl = msh->gl;
 
   gl->BindVertexArray(msh->buf.vao);
-  gl->DrawArrays(GL_TRIANGLES, 0, msh->buf.count);
+  if (msh->buf.ebo != 0) {
+    gl->DrawElements(GL_TRIANGLES, (GLsizei)msh->buf.count, GL_UNSIGNED_INT,
+                     NULL);
+  } else {
+    gl->DrawArrays(GL_TRIANGLES, 0, (GLsizei)msh->buf.count);
+  }
 }
 
 void msh_destroy(msh_t* msh) {

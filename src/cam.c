@@ -69,7 +69,7 @@ void cam_look(cam_t* cam, float delta_x, float delta_y) {
   cam->forward = vec3_normalize(forward);
 }
 
-mat44_t cam_get_mvp(cam_t* cam, int width, int height) {
+mat44_t cam_get_view_projection(cam_t* cam, int width, int height) {
   if (!cam || !cam->initialized || width <= 0 || height <= 0)
     return mat44_identity();
 
@@ -79,11 +79,10 @@ mat44_t cam_get_mvp(cam_t* cam, int width, int height) {
       vecmath_radians(cam->fov), (float)width / (float)height, 0.01f, 100.0f);
 
   cam->view = mat44_look_at_rh(cam->eye, target, cam->up);
-  cam->model = mat44_identity();
 
   cam->view_projection = mat44_mul_mat44(cam->view, cam->projection);
 
-  return mat44_mul_mat44(cam->model, cam->view_projection);
+  return cam->view_projection;
 }
 
 void cam_destroy(cam_t* cam) {

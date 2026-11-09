@@ -32,5 +32,5 @@ typedef struct cam_t {
 void cam_create(cam_t* cam, float fov);
 void cam_move(cam_t* cam, cam_movement_t movement, float delta_time);
 void cam_look(cam_t* cam, float delta_x, float delta_y);
-mat44_t cam_get_mvp(cam_t* cam, int width, int height);
+mat44_t cam_get_view_projection(cam_t* cam, int width, int height);
 void cam_destroy(cam_t* cam);
